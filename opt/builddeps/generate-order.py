@@ -3,12 +3,12 @@
 import sys, os, subprocess, shutil
 
 pkg = set()
-paths =  { 'dir': os.environ['HOME'] + '/src/pkgs',
+paths =  { 'dir': os.path.join(os.environ['HOME'], 'src/pkgs'),
   'order': 'order.pkg',
   'circ': 'circular.pkg' }
 circ = []
 order = []
-
+bootstrap = set()
 
 def get_default_log_name(name):
   if '.' in name: name = name.split('.')[0]
@@ -16,7 +16,8 @@ def get_default_log_name(name):
 
 
 def prepare_env():
-  basename = os.path.basename(__file__)
+  basepath, basename = os.path.split(__file__)
+  paths['bootstrap'] = os.path.join(basepath, 'bootstrap.pkg')
   paths['log'] = get_default_log_name(basename)
 
   clean_flag = False
@@ -42,11 +43,12 @@ def prepare_env():
       print("""Creates an ordered list of packages required to build specified packages
 Usage:""", basename, """[OPTION] <package list>
 Options:
-  --dir DIR     use working directory (default""", paths['dir'] + """)
-  --clean       clean working directory first
-  --order FILE  output build order to FILE (default""", paths['order'] + """)
-  --circ FILE   output circular dependenies to FILE (default""", paths['circ'] + """)
-  --log  FILE   log warnings to FILE (default""", paths['log'] + ')')
+  --dir DIR         use working directory (default""", paths['dir'] + """)
+  --clean           clean working directory first
+  --bootstrap FILE  read bootstrap packages from FILE (default""", paths['bootstrap'] + """)
+  --order FILE      output build order to FILE (default""", paths['order'] + """)
+  --circ FILE       output circular dependenies to FILE (default""", paths['circ'] + """)
+  --log  FILE       log warnings to FILE (default""", paths['log'] + ')')
       sys.exit(-1)
 
   if not pkg:
@@ -57,6 +59,9 @@ Options:
   if clean_flag:
     print('Removing ' + wdir)
     shutil.rmtree(wdir, ignore_errors = True)
+
+  with open(paths['bootstrap']) as f:
+    bootstrap.update(line.strip() for line in f)
   os.makedirs(wdir, exist_ok = True)
   os.chdir(wdir)
 
@@ -92,14 +97,16 @@ def gen_list():
       if filename[-4:] != '.dsc': continue
    
       write_log('Processing ' + filename)
+      deps = []
       with open(filename, 'r') as f:
         for line in f:
-          if line[:L_BUILD_DEPENDS] == BUILD_DEPENDS: break
+          if line[:L_BUILD_DEPENDS] == BUILD_DEPENDS:
+            deps = line[L_BUILD_DEPENDS:].split(',')
               
-        deps = line[L_BUILD_DEPENDS:].split(',')
-        for line in f:
-          if line[0] != ' ': break
-          else: deps.extend(line[1:].split(','))
+            for line in f:
+              if line[0] != ' ': break
+              else: deps.extend(line[1:].split(','))
+            break
 
     if deps is None:
       write_log('Cannot find .dsc file in ' + p)
@@ -110,9 +117,10 @@ def gen_list():
       if ' ' in dep: dep = dep.split()[0]
       if dep[-4:] == ':any': dep = dep[:-4]
       deps[i] = dep
+      if not dep in bootstrap: pkg_queue.append(dep)
           
     deps_dict[p] = deps
-    pkg_queue.extend(deps)   
+    print(deps)
     os.chdir('..')
 
   print(deps_dict)
