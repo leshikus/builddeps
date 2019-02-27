@@ -3,7 +3,7 @@
 import sys, os, subprocess, shutil
 
 pkg = set()
-paths =  { 'dir': os.environ['HOME'] + '/src/debian',
+paths =  { 'dir': os.environ['HOME'] + '/src/pkgs',
   'order': 'order.pkg',
   'circ': 'circular.pkg' }
 circ = []
@@ -71,35 +71,51 @@ def write_log(message):
 def gen_list():
   BUILD_DEPENDS = 'Build-Depends: '
   L_BUILD_DEPENDS = len(BUILD_DEPENDS)
-  pkg_new = pkg
-  order = list(pkg_new)
-  while pkg_new:
-    write_log('Installing ' + str(pkg_new))
-    subprocess.run(['apt-get', 'source'] + list(pkg_new))
+  pkg_queue = list(pkg)
+  deps_dict = {}
+  while pkg_queue:
+    p = pkg_queue.pop()
+    if p in deps_dict: continue
 
-    pkg_processed = set()
+    try:
+      os.mkdir(p)
+      os.chdir(p)
+      write_log('Installing ' + p)
+      subprocess.run(['apt-get', 'source', p])
+    except OSError:
+      write_log('Reusing ' + p)
+      os.chdir(p)
+
+    deps = None
+
     for filename in os.listdir('.'):
       if filename[-4:] != '.dsc': continue
-     
-      for p in pkg_new:
-        if p == filename[:len(p)] and filename[len(p)] == '_':
-          pkg_processed.add(p)
-
-          write_log('Processing ' + filename)
-          deps = []
-          with open(filename, 'r') as f:
-            for line in f:
-              if line[:L_BUILD_DEPENDS] == BUILD_DEPENDS: break
+   
+      write_log('Processing ' + filename)
+      with open(filename, 'r') as f:
+        for line in f:
+          if line[:L_BUILD_DEPENDS] == BUILD_DEPENDS: break
               
-            print(line[L_BUILD_DEPENDS:])
+        deps = line[L_BUILD_DEPENDS:].split(',')
+        for line in f:
+          if line[0] != ' ': break
+          else: deps.extend(line[1:].split(','))
 
-    if pkg_new != pkg_processed:
-      pkg_diff = pkg_new - pkg_processed
-      write_log('Warning: cannot find ' + next(iter(pkg_diff)) + '_*.dsc')
-      print('pkg_new - pkg_processed =', pkg_diff)
+    if deps is None:
+      write_log('Cannot find .dsc file in ' + p)
+      sys.exit(-1)
 
-    pkg_new = set()
+    for i in range(len(deps)):
+      dep = deps[i].strip()
+      if ' ' in dep: dep = dep.split()[0]
+      if dep[-4:] == ':any': dep = dep[:-4]
+      deps[i] = dep
+          
+    deps_dict[p] = deps
+    pkg_queue.extend(deps)   
+    os.chdir('..')
 
+  print(deps_dict)
 
 def flush_output():
   paths['log'].close()
