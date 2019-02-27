@@ -74,54 +74,28 @@ def write_log(message):
 
 
 def gen_list():
-  BUILD_DEPENDS = 'Build-Depends: '
-  L_BUILD_DEPENDS = len(BUILD_DEPENDS)
+  BUILD_DEPENDS = 'Build-Depends:'
   pkg_queue = list(pkg)
   deps_dict = {}
   while pkg_queue:
     p = pkg_queue.pop()
     if p in deps_dict: continue
 
-    try:
-      os.mkdir(p)
-      os.chdir(p)
-      write_log('Installing ' + p)
-      subprocess.run(['apt-get', 'source', p])
-    except OSError:
-      write_log('Reusing ' + p)
-      os.chdir(p)
+    write_log('Get dependecies for ' + p)
+    result = subprocess.run(['apt-rdepends', '--build-depends', '--follow=DEPENDS', p], stdout = subprocess.PIPE)
 
-    deps = None
-
-    for filename in os.listdir('.'):
-      if filename[-4:] != '.dsc': continue
-   
-      write_log('Processing ' + filename)
-      deps = []
-      with open(filename, 'r') as f:
-        for line in f:
-          if line[:L_BUILD_DEPENDS] == BUILD_DEPENDS:
-            deps = line[L_BUILD_DEPENDS:].split(',')
-              
-            for line in f:
-              if line[0] != ' ': break
-              else: deps.extend(line[1:].split(','))
-            break
-
-    if deps is None:
-      write_log('Cannot find .dsc file in ' + p)
-      sys.exit(-1)
-
-    for i in range(len(deps)):
-      dep = deps[i].strip()
-      if ' ' in dep: dep = dep.split()[0]
-      if dep[-4:] == ':any': dep = dep[:-4]
-      deps[i] = dep
+    bd_flag = False
+    deps = []
+    for d in result.stdout.decode('utf-8').split():
+      if bd_flag:
+        deps.append(d)
+        bd_flag = False
+      else: bd_flag = d == BUILD_DEPENDS
+      
+    for dep in deps:
       if not dep in bootstrap: pkg_queue.append(dep)
           
     deps_dict[p] = deps
-    print(deps)
-    os.chdir('..')
 
   print(deps_dict)
 
