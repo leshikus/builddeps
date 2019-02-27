@@ -7,8 +7,8 @@ params =  { 'dir': os.path.join(os.environ['HOME'], 'src/pkgs'),
   'circular': 'circular.pkg',
   'script': '/tmp/build.sh',
   'level': '1' }
-circular = []
 deps_dict = {}
+circular = []
 order = []
 bootstrap = set()
 
@@ -42,13 +42,12 @@ def prepare_env():
         pos += 1
         continue
 
-      print("""Creates an ordered list of packages required to build specified packages
+      print("""Creates an ordered list of packages required to build specified packages. The packages which break circular dependencies are built first.
 Usage:""", basename, """[OPTION] <package list>
 Options (default value in brackets):
   --dir DIR         use DIR as a working directory (""" + params['dir'] + """)
   --clean           clean working directory first
   --bootstrap FILE  read bootstrap packages from FILE (""" + params['bootstrap'] + """)
-  --circular FILE   write circularular dependenies to FILE (""" + params['circular'] + """)
   --script FILE     write a build script to FILE (""" + params['script'] + """)
   --log FILE        log warnings to FILE (""" + params['log'] + """)
   --level n         recursion level for dependencies (""" + params['level'] + ')')
@@ -107,34 +106,53 @@ def get_deps():
 def gen_lists():
   ref_count = {}
 
+  empty_nodes = set()
+  pkgs = set()
   for k, v in deps_dict.items():
     for d in v:
-      r = ref_count.get(d)
-      ref_count[d] = 1 if r is None else r + 1
+      if not d in deps_dict: empty_nodes.add(d)
+
+  for d in empty_nodes: deps_dict[d] = []
+  for k in deps_dict:
+    pkgs.add(k)
+    ref_count[k] = 0
 
   for k, v in deps_dict.items():
-    if not k in ref_count:
-      order.append(k)
-      for d in v: ref_count[d] -= 1
-  
-  is_changed = True
-  while is_changed:
-    is_changed = False
-    for k, v in ref_count.items():
-      if v == 0:
-        order.append(k)
-        r = deps_dict.get(k)
-        if r is not None:
-          for d in r: ref_count[d] -= 1
-        is_changed = True
-        del ref_count[k]
-        break
+    for d in v: ref_count[d] += 1
 
-  
-  circ_refs = [(v, k) for k, v in ref_count.items()]
-  circ_refs.sort(reverse = True)
-  for v, k in circ_refs: circular.append(k)
+  while pkgs:
 
+    while True:
+      zero_ref_counts = set()
+      for k in pkgs:
+        if ref_count[k] == 0:
+          zero_ref_counts.add(k)
+          order.append(k)
+          for d in deps_dict[k]: ref_count[d] -= 1
+
+      if zero_ref_counts:
+        pkgs -= zero_ref_counts
+      else: break
+
+    if not pkgs: break
+
+    # all ref_count[k] > 0 - each node has a parent reference
+    parent = {}
+    for k in pkgs:
+      for v in deps_dict[k]: parent[v] = k
+
+    # walk along the graph until we come to the point
+    # which was already visited
+    visited = set()
+    while not k in visited:
+      visited.add(k)
+      k = parent[k]
+
+    # place package which breaks a loop to the front
+    circular.append(k)
+    for v in deps_dict[k]: ref_count[v] -= 1
+    pkgs.remove(k)
+  
   write_log('circular: ' + str(circular))
   write_log('order: ' + str(order))
 
@@ -154,8 +172,8 @@ build() (
   apt-get build-dep -y $1
   cd */debian
   debuild -b -uc -us
-  cp ../../*.deb /var/cache/apt/archives/ 
-  apt-get install --reinstall -y $1
+  apt-get install -y $1
+  dpkg -i ../../$1*.deb
 )
 
 cd `dirname "$0"`
