@@ -6,6 +6,7 @@ BUILD_FILE=/tmp/build.sh
 CHRD="$SCRIPT_DIR/$RELEASE-chroot"
 
 get_bootstrap() {
+  umount "$CHRD"/proc || true
   rm -rf "/opt/builddeps/$RELEASE-chroot"
   debootstrap $RELEASE "$CHRD" http://deb.debian.org/debian/
   chroot "$CHRD" sh <<EOF
