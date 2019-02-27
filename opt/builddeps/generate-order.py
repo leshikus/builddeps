@@ -148,14 +148,14 @@ def flush_output():
     f.write("""#!/bin/sh
 
 build() (
-  mkdir $1
+  mkdir -p $1
   cd $1
   apt-get source $1
-  apt-get build-dep $1
-  cd $1/debian
+  apt-get build-dep -y $1
+  cd */debian
   debuild -b -uc -us
-  cd ../..
-  dpkg -i *.deb
+  cp ../../*.deb /var/cache/apt/archives/ 
+  apt-get install --reinstall -y $1
 )
 
 cd `dirname "$0"`
