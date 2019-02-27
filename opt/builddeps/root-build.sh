@@ -2,12 +2,8 @@
 
 RELEASE=stable
 SCRIPT_DIR=/opt/builddeps/
+BUILD_FILE=/tmp/build.sh
 CHRD="$SCRIPT_DIR/$RELEASE-chroot"
-
-install_vbox() {
-  apt-get install -y build-essential
-  apt-get install -y  linux-headers-$(uname -r)
-}
 
 clean() {
   rm -rf "/opt/builddeps/$RELEASE-chroot"
@@ -19,6 +15,17 @@ get_bootstrap() {
   chroot "$CHRD" dpkg -l | tail -n +6 | cut -f3 -d' ' >"$SCRIPT_DIR"/bootstrap.pkg
 }
 
+run_build() {
+  cp $BUILD_FILE "$CHRD"
+  chroot "$CHRD" sh -evx /`basename "$BUILD_FILE"`
+}
+
+test -f "$BUILD_FILE" || {
+  echo Cannot find $BUILD_FILE
+  exit -1
+}
+
 #clean
-get_bootstrap
+#get_bootstrap
+run_build
 
