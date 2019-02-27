@@ -1,0 +1,7 @@
+Package: builddeps
+Version: 0.1
+Maintainer: Alexei Fedotov
+Architecture: all
+Description: Utilities for building build dependencies for given packages
+Depends: python3 build-essential fakeroot devscripts
+
