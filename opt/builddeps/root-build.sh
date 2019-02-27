@@ -1,7 +1,7 @@
 #!/bin/sh
 
 RELEASE=stable
-SCRIPT_DIR=/opt/builddeps/
+SCRIPT_DIR=/opt/builddeps
 BUILD_FILE=/tmp/build.sh
 CHRD="$SCRIPT_DIR/$RELEASE-chroot"
 
