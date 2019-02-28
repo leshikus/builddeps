@@ -6,11 +6,13 @@ BUILD_FILE=/tmp/build.sh
 CHRD="$SCRIPT_DIR/$RELEASE-chroot"
 
 get_bootstrap() {
-  umount "$CHRD"/proc || true
+  umount "$CHRD"/proc "$CHRD"/sys "$CHRD"/dev || true
   rm -rf "/opt/builddeps/$RELEASE-chroot"
   debootstrap $RELEASE "$CHRD" http://deb.debian.org/debian/
+  mount --bind /proc "$CHRD"/proc
+  mount --bind /dev "$CHRD"/dev
+  mount --bind /sys "$CHRD"/sys
   chroot "$CHRD" sh <<EOF
-mount none /proc -t proc  
 apt-get install -y build-essential devscripts
 fgrep deb-src /etc/apt/sources.list || {
   echo 'deb-src http://deb.debian.org/debian stable main' >> /etc/apt/sources.list
@@ -27,7 +29,7 @@ run_build() {
   }
 
   cp $BUILD_FILE "$CHRD"
-  chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee build.log
+  chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee "$SCRIPT_DIR"/build.log
 }
 
 get_bootstrap

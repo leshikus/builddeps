@@ -159,25 +159,28 @@ def flush_output():
   with open(params['script'], 'w') as f:
     f.write("""#!/bin/sh
 
-build() (
+build() {(
+  set -e
   mkdir -p $1
   cd $1
   apt-get source $1
   apt-get build-dep -y $1
   cd */debian
-  debuild -b -uc -us
+  DEB_BUILD_OPTIONS=nocheck debuild -b -uc -us
   apt-get install -y $1
   dpkg -i ../../$1*.deb
-)
+) || echo BUILD_ERROR $1
+}
 
 cd `dirname "$0"`
+rm -rf build
 mkdir -p build
 cd build
 
 """)
     for p in circular: f.write('build ' + p + '\n')
     for i in range(len(order)-1, -1, -1): f.write('build ' + order[i] + '\n')
-    f.write('echo Comlete\n')
+    f.write('echo Complete\n')
 
 
 prepare_env()
