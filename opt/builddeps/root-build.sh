@@ -27,7 +27,7 @@ run_build() {
   }
 
   cp $BUILD_FILE "$CHRD"
-  chroot "$CHRD" sh -evx /`basename "$BUILD_FILE"`
+  chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee build.log
 }
 
 get_bootstrap
