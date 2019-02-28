@@ -1,6 +1,7 @@
 # builddeps
 Building build dependencies for given packages.
 
-Build the debian package: `dpkg-deb --build builddeps`.
+Build the debian package: `cd src; dpkg-deb --build builddeps ../packages`.
 
-Install the package: `dpkg -i builddeps.deb; apt-get install -f`.
+Install the package: `dpkg -i builddeps*.deb; apt-get install -f`.
+
