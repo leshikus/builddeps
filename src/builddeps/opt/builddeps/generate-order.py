@@ -10,7 +10,6 @@ params =  { 'dir': os.path.join(os.environ['HOME'], 'src/pkgs'),
 deps_dict = {}
 circular = []
 order = []
-bootstrap = set()
 
 def get_default_log_name(name):
   if '.' in name: name = name.split('.')[0]
@@ -19,7 +18,6 @@ def get_default_log_name(name):
 
 def prepare_env():
   basepath, basename = os.path.split(__file__)
-  params['bootstrap'] = os.path.join(basepath, 'bootstrap.pkg')
   params['log'] = get_default_log_name(basename)
 
   clean_flag = False
@@ -47,7 +45,6 @@ Usage:""", basename, """[OPTION] <package list>
 Options (default value in brackets):
   --dir DIR         use DIR as a working directory (""" + params['dir'] + """)
   --clean           clean working directory first
-  --bootstrap FILE  read bootstrap packages from FILE (""" + params['bootstrap'] + """)
   --script FILE     write a build script to FILE (""" + params['script'] + """)
   --log FILE        log warnings to FILE (""" + params['log'] + """)
   --level n         recursion level for dependencies (""" + params['level'] + ')')
@@ -62,8 +59,6 @@ Options (default value in brackets):
     print('Removing ' + wdir)
     shutil.rmtree(wdir, ignore_errors = True)
 
-  with open(params['bootstrap']) as f:
-    bootstrap.update(line.strip() for line in f)
   os.makedirs(wdir, exist_ok = True)
   os.chdir(wdir)
 
@@ -96,8 +91,7 @@ def get_deps():
       else: bd_flag = d == BUILD_DEPENDS
     
     if l < params['level']:
-      for dep in deps:
-        if not dep in bootstrap: heapq.heappush(pkg_queue, (l + 1, dep))
+      for dep in deps: heapq.heappush(pkg_queue, (l + 1, dep))
           
     deps_dict[p] = deps
     #write_log(p + '->' + str(deps))
