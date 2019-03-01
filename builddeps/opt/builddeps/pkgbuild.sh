@@ -15,8 +15,8 @@ cd "$dir1"
 apt-get source $1
 apt-get build-dep -y $1
 cd */debian
-DEB_BUILD_OPTIONS='nocheck parallel=6' debuild -b -uc -us
-#DEB_BUILD_OPTIONS='nocheck' debuild -b -uc -us
+cpu=`lscpu | grep '^CPU(' | awk '{ print $2 }'`
+DEB_BUILD_OPTIONS='nocheck parallel=$cpu' debuild -b -uc -us
 apt-get install -y $1
 dpkg -i ../../$1_*.deb
 
