@@ -15,7 +15,7 @@ cd "$dir"
 apt-get source $1
 apt-get build-dep -y $1
 cd */debian
-LC_ALL='en_US.UTF-8' DEB_BUILD_OPTIONS='nocheck parallel=6' debuild -b -uc -us
+DEB_BUILD_OPTIONS='nocheck parallel=6' debuild -b -uc -us
 apt-get install -y $1
 dpkg -i ../../$1_*.deb
 
