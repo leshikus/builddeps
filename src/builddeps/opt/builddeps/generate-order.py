@@ -19,6 +19,7 @@ def get_default_log_name(name):
 def prepare_env():
   basepath, basename = os.path.split(__file__)
   params['log'] = get_default_log_name(basename)
+  params['pkgbuild'] = 'pkgbuild.sh'
 
   clean_flag = False
   if len(sys.argv) > 1:
@@ -46,6 +47,7 @@ Options (default value in brackets):
   --dir DIR         use DIR as a working directory (""" + params['dir'] + """)
   --clean           clean working directory first
   --script FILE     write a build script to FILE (""" + params['script'] + """)
+  --pkgbuild SCRIPT use SCRIPT to build a package (""" + params['pkgscript'] + """)
   --log FILE        log warnings to FILE (""" + params['log'] + """)
   --level n         recursion level for dependencies (""" + params['level'] + ')')
       sys.exit(-1)
@@ -159,28 +161,14 @@ def flush_output():
   with open(params['script'], 'w') as f:
     f.write("""#!/bin/sh
 
-build() {(
-  set -e
-  mkdir -p $1
-  cd $1
-  apt-get source $1
-  apt-get build-dep -y $1
-  cd */debian
-  DEB_BUILD_OPTIONS=nocheck debuild -b -uc -us
-  apt-get install -y $1
-  dpkg -i ../../$1*.deb
-) || echo BUILD_ERROR $1
+pkgbuild() {
+  sh """ + params['pkgbuild'] + """ $1 && echo PKGBUILD_OK $1 || echo PKGBUILD_ERROR $1
 }
-
-cd `dirname "$0"`
-rm -rf build
-mkdir -p build
-cd build
 
 """)
     for p in circular: f.write('build ' + p + '\n')
-    for i in range(len(order)-1, -1, -1): f.write('build ' + order[i] + '\n')
-    f.write('echo Complete\n')
+    for i in range(len(order)-1, -1, -1): f.write('pkgbuild ' + order[i] + '\n')
+    f.write('echo PKGBUILD_COMPLETE\n')
 
 
 prepare_env()

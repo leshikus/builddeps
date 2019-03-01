@@ -28,7 +28,7 @@ run_build() {
     exit -1
   }
 
-  cp $BUILD_FILE "$CHRD"
+  cp "$BUILD_FILE" "$SCRIPT_DIR"/pkgbuild.sh "$CHRD"
   chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee "$SCRIPT_DIR"/build.log
 }
 
