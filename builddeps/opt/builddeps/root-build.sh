@@ -19,7 +19,6 @@ fgrep deb-src /etc/apt/sources.list || {
   apt-get update
 }
 EOF
-  chroot "$CHRD" dpkg -l | tail -n +6 | cut -f3 -d' ' >"$SCRIPT_DIR"/bootstrap.pkg
 }
 
 run_build() {
