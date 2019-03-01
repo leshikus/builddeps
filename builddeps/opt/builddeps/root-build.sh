@@ -14,10 +14,10 @@ get_bootstrap() {
   mount --bind /sys "$CHRD"/sys
   chroot "$CHRD" sh <<EOF
 apt-get install -y build-essential devscripts
-fgrep deb-src /etc/apt/sources.list || {
-  echo 'deb-src http://deb.debian.org/debian stable main' >> /etc/apt/sources.list
-  apt-get update
-}
+echo 'deb-src http://deb.debian.org/debian stable main' >> /etc/apt/sources.list
+apt-get update
+echo 'en_US.UTF-8 UTF-8' >/etc/locale.gen
+locale-gen
 EOF
 }
 
