@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -evx
 
 test -n "$1" || {
   echo Usage: $0 [package name]
