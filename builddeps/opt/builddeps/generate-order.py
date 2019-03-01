@@ -123,7 +123,7 @@ def gen_lists():
       for k in pkgs:
         if ref_count[k] == 0:
           zero_ref_counts.add(k)
-          order.append(k)
+          order.append(k) # may add several packages to parallel build
           for d in deps_dict[k]: ref_count[d] -= 1
 
       if zero_ref_counts:

@@ -10,13 +10,13 @@ test -n "$1" || {
 dir0=`dirname "$0"`
 dir1="$dir0"/build/$1
 mkdir -p "$dir1"
-cd "$dir"
+cd "$dir0"
 
 apt-get source $1
 apt-get build-dep -y $1
 cd */debian
-#DEB_BUILD_OPTIONS='nocheck parallel=6' debuild -b -uc -us
-DEB_BUILD_OPTIONS='nocheck' debuild -b -uc -us
+DEB_BUILD_OPTIONS='nocheck parallel=6' debuild -b -uc -us
+#DEB_BUILD_OPTIONS='nocheck' debuild -b -uc -us
 apt-get install -y $1
 dpkg -i ../../$1_*.deb
 
