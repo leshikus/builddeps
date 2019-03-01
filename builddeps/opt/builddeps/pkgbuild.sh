@@ -22,6 +22,6 @@ dpkg -i --force-depends --force-downgrade ../../$1_*.deb
 apt-get install -yf
 
 # if successful
-cd "$dir0"
+cd ../../../..
 rm -rf build/"$1"
 
