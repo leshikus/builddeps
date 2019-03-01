@@ -24,7 +24,7 @@ EOF
 run_build() {
   test -f "$BUILD_FILE" || {
     echo Cannot find $BUILD_FILE
-    exit -1
+    exit 1
   }
 
   cp "$BUILD_FILE" "$SCRIPT_DIR"/pkgbuild.sh "$CHRD"

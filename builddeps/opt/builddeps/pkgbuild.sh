@@ -4,7 +4,7 @@ set -evx
 
 test -n "$1" || {
   echo Usage: $0 [package name]
-  exit -1
+  exit 1
 }
 
 dir0=`dirname "$0"`
