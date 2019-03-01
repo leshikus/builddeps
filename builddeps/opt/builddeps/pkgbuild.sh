@@ -17,10 +17,11 @@ apt-get build-dep -y $1
 cd */debian
 cpu=`lscpu | grep '^CPU(' | awk '{ print $2 }'`
 DEB_BUILD_OPTIONS='nocheck parallel=$cpu' debuild -b -uc -us
-apt-get install -y $1
-dpkg -i ../../$1_*.deb
+cp ../../*.deb /var/cache/apt/archives/
+dpkg -i --force-depends --force-downgrade ../../$1_*.deb
+apt-get install -yf
 
 # if successful
 cd "$dir0"
-rm -rf build/"$1" &
+rm -rf build/"$1"
 
