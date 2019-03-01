@@ -166,7 +166,7 @@ pkgbuild() {
 }
 
 """)
-    for p in circular: f.write('build ' + p + '\n')
+    for p in circular: f.write('pkgbuild ' + p + '\n')
     for i in range(len(order)-1, -1, -1): f.write('pkgbuild ' + order[i] + '\n')
     f.write('echo PKGBUILD_COMPLETE\n')
 

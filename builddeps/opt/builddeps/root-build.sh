@@ -29,7 +29,7 @@ run_build() {
   }
 
   cp "$BUILD_FILE" "$SCRIPT_DIR"/pkgbuild.sh "$CHRD"
-  chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee "$SCRIPT_DIR"/build.log
+  chroot "$CHRD" sh -vx /`basename "$BUILD_FILE"` 2>&1 | tee "$CHRD"/build.log
 }
 
 get_bootstrap
