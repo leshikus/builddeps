@@ -7,5 +7,5 @@ Install the package (should be root@): `dpkg -i packages/builddeps*.deb; apt-get
 
 Generate dependency order for packages: `/opt/builddeps/generate-order.py [packages]`.
 
-Build the packages (should be root@): `sudo sh /opt/builddeps/root-build.sh`.
+Build the packages (should be root@): `sh /opt/builddeps/root-build.sh`.
 
